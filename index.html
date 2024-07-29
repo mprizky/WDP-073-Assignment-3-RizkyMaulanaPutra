@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realtime COVID-19 Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #dedeeb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: #5a748d;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        #covid-data {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, auto);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .box {
+            background: #967676;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(241, 245, 233, 0.719);
+        }
+        .search-container {
+            margin-bottom: 20px;
+        }
+        .search-container input {
+            padding: 10px;
+            font-size: 16px;
+            width: 70%;
+        }
+        .search-container button {
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Realtime COVID-19</h1>
+        <div class="search-container">
+            <input type="text" id="country-input" placeholder="Masukkan nama negara">
+            <button onclick="searchCountry()">Cari</button>
+        </div>
+        <div id="covid-data"></div>
+    </div>
+    <script>
+        const options = {
+            method: 'GET',
+            headers: {
+                'X-RapidAPI-Key': 'e82c4d708cmshbdeeb4e861066cap17180cjsna482adbc2702',
+                'X-RapidAPI-Host': 'covid-193.p.rapidapi.com'
+            }
+        };
+
+        function searchCountry() {
+            const country = document.getElementById('country-input').value.trim();
+            if (country === '') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Peringatan',
+                    text: 'Masukkan nama negara terlebih dahulu!'
+                });
+                return;
+            }
+
+            fetch(`https://covid-193.p.rapidapi.com/statistics?country=${country}`, options)
+                .then(response => response.json())
+                .then(response => {
+                    const data = response.response[0];
+                    if (!data) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Tidak Ditemukan',
+                            text: `Data untuk negara "${country}" tidak ditemukan!`
+                        });
+                        document.getElementById('covid-data').innerHTML = '';
+                        return;
+                    }
+                    document.getElementById('covid-data').innerHTML = `
+                        <div class="box"><p>Negara: ${data.country}</p></div>
+                        <div class="box"><p>Kasus Baru: ${data.cases.new ? data.cases.new : 'N/A'}</p></div>
+                        <div class="box"><p>Total Kasus: ${data.cases.total}</p></div>
+                        <div class="box"><p>Sembuh: ${data.cases.recovered}</p></div>
+                        <div class="box"><p>Kematian: ${data.deaths.total}</p></div>
+                        <div class="box"><p>Kasus Aktif: ${data.cases.active}</p></div>
+                    `;
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Terjadi kesalahan dalam mengambil data!'
+                    });
+                });
+        }
+    </script>
+</body>
+</html>
